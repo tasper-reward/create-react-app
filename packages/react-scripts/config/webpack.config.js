@@ -352,7 +352,27 @@ module.exports = function (webpackEnv) {
           enforce: 'pre',
           exclude: /@babel(?:\/|\\{1,2})runtime/,
           test: /\.(js|mjs|jsx|ts|tsx|css)$/,
-          loader: require.resolve('source-map-loader'),
+          use: [
+            {
+              loader: require.resolve('source-map-loader'),
+              options: {
+                filterSourceMappingUrl: (url, resourcePath) => {
+                  //console.log({ url, resourcePath });
+
+                  // if (/@tasper/i.test(url)) {
+                  //   return false;
+                  // }
+
+                  if (/monaco-editor|@tasper/i.test(resourcePath)) {
+                    return 'skip';
+                  }
+
+                  return true;
+                },
+              },
+            },
+          ],
+          // loader: require.resolve('source-map-loader'),
         },
         {
           // "oneOf" will traverse all following loaders until one will
@@ -385,6 +405,19 @@ module.exports = function (webpackEnv) {
             },
             {
               test: /\.svg$/,
+              include: /tasper(\\|\/)ui/,
+              use: [
+                {
+                  loader: require.resolve('svg-inline-loader'),
+                },
+              ],
+              issuer: {
+                and: [/\.(ts|tsx|js|jsx|md|mdx)$/],
+              },
+            },
+            {
+              test: /\.svg$/,
+              exclude: /tasper(\\|\/)ui/,
               use: [
                 {
                   loader: require.resolve('@svgr/webpack'),
@@ -413,7 +446,7 @@ module.exports = function (webpackEnv) {
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
-              include: paths.appSrc,
+              include: [paths.appSrc, paths.workspaceSrc],
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve(
