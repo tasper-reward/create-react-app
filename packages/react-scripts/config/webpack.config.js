@@ -182,7 +182,7 @@ module.exports = function (webpackEnv) {
           loader: require.resolve('resolve-url-loader'),
           options: {
             sourceMap: isEnvProduction ? shouldUseSourceMap : isEnvDevelopment,
-            root: paths.appSrc,
+            // root: paths.appSrc,
           },
         },
         {
@@ -573,12 +573,37 @@ module.exports = function (webpackEnv) {
                 },
               }),
             },
+            {
+              test: sassRegex,
+              include: /tasper(\\|\/)ui/,
+              use: getStyleLoaders(
+                {
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction
+                    ? shouldUseSourceMap
+                    : isEnvDevelopment,
+                  modules: {
+                    mode: 'local',
+                    getLocalIdent: getCSSModuleLocalIdent,
+                  },
+                },
+                'sass-loader'
+              ),
+            },
             // Opt-in support for SASS (using .scss or .sass extensions).
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
             {
               test: sassRegex,
-              exclude: sassModuleRegex,
+              exclude: function (url) {
+                if (/tasper(\\|\/)ui/.test(url)) {
+                  return true;
+                }
+                if (sassModuleRegex.test(url)) {
+                  return true;
+                }
+                return false;
+              },
               use: getStyleLoaders(
                 {
                   importLoaders: 3,
